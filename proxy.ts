@@ -1,121 +1,223 @@
-import { notFound } from "next/navigation";
-import Link from "next/link";
-import { createClient } from "@/lib/supabase/server";
-import { getCurrentUserAndHousehold } from "@/lib/household";
-import type { Asset, Receipt } from "@/types/database";
-import { DeleteAssetButton } from "./DeleteAssetButton";
+"use client";
 
-function formatDate(date: string | null) {
-  if (!date) return "—";
-  return new Date(date).toLocaleDateString("en-GB", {
-    day: "numeric",
-    month: "short",
-    year: "numeric",
-  });
+import { useEffect, useState } from "react";
+import { useRouter, useParams } from "next/navigation";
+import { createClient } from "@/lib/supabase/client";
+import { ASSET_CATEGORIES, type AssetCategory } from "@/types/database";
+
+interface FormState {
+  name: string;
+  category: AssetCategory;
+  brand: string;
+  model: string;
+  vendor: string;
+  purchase_date: string;
+  price: string;
+  warranty_months: string;
+  notes: string;
 }
 
-function formatSAR(amount: number | null) {
-  if (amount === null) return "—";
-  return new Intl.NumberFormat("en-SA", {
-    style: "currency",
-    currency: "SAR",
-    maximumFractionDigits: 0,
-  }).format(amount);
-}
+export default function EditAssetPage() {
+  const router = useRouter();
+  const params = useParams<{ id: string }>();
+  const [form, setForm] = useState<FormState | null>(null);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
 
-export default async function AssetDetailPage({
-  params,
-}: {
-  params: Promise<{ id: string }>;
-}) {
-  const { id } = await params;
-  const { household } = await getCurrentUserAndHousehold();
-  if (!household) return null;
+  useEffect(() => {
+    async function load() {
+      const supabase = createClient();
+      const { data, error } = await supabase
+        .from("assets")
+        .select("*")
+        .eq("id", params.id)
+        .single();
 
-  const supabase = await createClient();
-  const { data: asset } = await supabase
-    .from("assets")
-    .select("*")
-    .eq("id", id)
-    .single();
+      if (error || !data) {
+        setError("Could not load this asset.");
+        return;
+      }
 
-  if (!asset) notFound();
-
-  const typedAsset = asset as Asset;
-
-  let receiptPhotoUrl: string | null = null;
-  let receipt: Receipt | null = null;
-  if (typedAsset.receipt_id) {
-    const { data: receiptRow } = await supabase
-      .from("receipts")
-      .select("*")
-      .eq("id", typedAsset.receipt_id)
-      .single();
-    receipt = receiptRow as Receipt | null;
-
-    if (receipt) {
-      const { data: signed } = await supabase.storage
-        .from("receipts")
-        .createSignedUrl(receipt.image_path, 60 * 10);
-      receiptPhotoUrl = signed?.signedUrl ?? null;
+      setForm({
+        name: data.name ?? "",
+        category: data.category ?? "Other",
+        brand: data.brand ?? "",
+        model: data.model ?? "",
+        vendor: data.vendor ?? "",
+        purchase_date: data.purchase_date ?? "",
+        price: data.price?.toString() ?? "",
+        warranty_months: data.warranty_months?.toString() ?? "",
+        notes: data.notes ?? "",
+      });
     }
+    load();
+  }, [params.id]);
+
+  async function handleSave(e: React.FormEvent) {
+    e.preventDefault();
+    if (!form) return;
+    setLoading(true);
+    setError("");
+
+    const supabase = createClient();
+    const { error } = await supabase
+      .from("assets")
+      .update({
+        name: form.name,
+        category: form.category,
+        brand: form.brand || null,
+        model: form.model || null,
+        vendor: form.vendor || null,
+        purchase_date: form.purchase_date || null,
+        price: form.price ? parseFloat(form.price) : null,
+        warranty_months: form.warranty_months ? parseInt(form.warranty_months, 10) : null,
+        notes: form.notes || null,
+      })
+      .eq("id", params.id);
+
+    if (error) {
+      setError(error.message);
+      setLoading(false);
+      return;
+    }
+
+    router.push(`/assets/${params.id}`);
+    router.refresh();
+  }
+
+  if (!form) {
+    return (
+      <div className="p-4 max-w-lg mx-auto">
+        {error ? <p className="text-rust text-sm">{error}</p> : <p className="text-ink-soft text-sm">Loading...</p>}
+      </div>
+    );
   }
 
   return (
     <div className="p-4 max-w-lg mx-auto space-y-4 pb-8">
-      <Link href="/assets" className="text-teal text-sm">
-        ← Back to assets
-      </Link>
+      <h1 className="font-serif text-xl text-ink">Edit asset</h1>
 
-      <div className="bg-white border border-line rounded-xl p-5">
-        <h1 className="font-serif text-2xl text-ink">{typedAsset.name}</h1>
-        <p className="text-ink-soft text-sm mt-1">{typedAsset.category}</p>
-
-        <dl className="mt-5 space-y-3 text-sm">
-          <Row label="Brand / model" value={[typedAsset.brand, typedAsset.model].filter(Boolean).join(" / ") || "—"} />
-          <Row label="Vendor" value={typedAsset.vendor ?? "—"} />
-          <Row label="Purchase date" value={formatDate(typedAsset.purchase_date)} />
-          <Row label="Price" value={formatSAR(typedAsset.price)} mono />
-          <Row
-            label="Warranty"
-            value={
-              typedAsset.warranty_expiry_date
-                ? `${typedAsset.warranty_months} months — expires ${formatDate(typedAsset.warranty_expiry_date)}`
-                : "No warranty on file"
-            }
+      <form onSubmit={handleSave} className="bg-white border border-line rounded-xl p-4 space-y-3">
+        <Field label="Item name">
+          <input
+            required
+            value={form.name}
+            onChange={(e) => setForm({ ...form, name: e.target.value })}
+            className="input"
           />
-          {typedAsset.notes && <Row label="Notes" value={typedAsset.notes} />}
-        </dl>
-      </div>
+        </Field>
 
-      {receiptPhotoUrl && (
-        <div className="bg-white border border-line rounded-xl p-4">
-          <p className="text-xs text-ink-soft mb-2">Receipt photo</p>
-          {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img src={receiptPhotoUrl} alt="Receipt" className="rounded-lg w-full" />
+        <Field label="Category">
+          <select
+            value={form.category}
+            onChange={(e) => setForm({ ...form, category: e.target.value as AssetCategory })}
+            className="input"
+          >
+            {ASSET_CATEGORIES.map((c) => (
+              <option key={c} value={c}>
+                {c}
+              </option>
+            ))}
+          </select>
+        </Field>
+
+        <div className="grid grid-cols-2 gap-3">
+          <Field label="Brand">
+            <input
+              value={form.brand}
+              onChange={(e) => setForm({ ...form, brand: e.target.value })}
+              className="input"
+            />
+          </Field>
+          <Field label="Model">
+            <input
+              value={form.model}
+              onChange={(e) => setForm({ ...form, model: e.target.value })}
+              className="input"
+            />
+          </Field>
         </div>
-      )}
 
-      <div className="flex gap-2">
-        <Link
-          href={`/assets/${typedAsset.id}/edit`}
-          className="flex-1 text-center border border-teal text-teal text-sm py-2 rounded-lg hover:bg-teal-tint transition-colors"
+        <Field label="Vendor / store">
+          <input
+            value={form.vendor}
+            onChange={(e) => setForm({ ...form, vendor: e.target.value })}
+            className="input"
+          />
+        </Field>
+
+        <div className="grid grid-cols-2 gap-3">
+          <Field label="Purchase date">
+            <input
+              type="date"
+              value={form.purchase_date}
+              onChange={(e) => setForm({ ...form, purchase_date: e.target.value })}
+              className="input"
+            />
+          </Field>
+          <Field label="Price (SAR)">
+            <input
+              type="number"
+              step="0.01"
+              value={form.price}
+              onChange={(e) => setForm({ ...form, price: e.target.value })}
+              className="input font-mono"
+            />
+          </Field>
+        </div>
+
+        <Field label="Warranty (months)">
+          <input
+            type="number"
+            value={form.warranty_months}
+            onChange={(e) => setForm({ ...form, warranty_months: e.target.value })}
+            className="input"
+          />
+        </Field>
+
+        <Field label="Notes">
+          <textarea
+            value={form.notes}
+            onChange={(e) => setForm({ ...form, notes: e.target.value })}
+            className="input"
+            rows={2}
+          />
+        </Field>
+
+        {error && <p className="text-rust text-sm">{error}</p>}
+
+        <button
+          type="submit"
+          disabled={loading}
+          className="w-full bg-teal text-white rounded-lg py-2.5 font-medium hover:bg-teal-dark transition-colors disabled:opacity-60"
         >
-          Edit
-        </Link>
-        <div className="flex-1">
-          <DeleteAssetButton assetId={typedAsset.id} />
-        </div>
-      </div>
+          {loading ? "Saving..." : "Save changes"}
+        </button>
+      </form>
+
+      <style jsx global>{`
+        .input {
+          width: 100%;
+          border: 1px solid var(--color-line);
+          border-radius: 0.5rem;
+          padding: 0.5rem 0.75rem;
+          color: var(--color-ink);
+        }
+        .input:focus {
+          outline: none;
+          border-color: var(--color-teal);
+          box-shadow: 0 0 0 2px var(--color-teal-tint);
+        }
+      `}</style>
     </div>
   );
 }
 
-function Row({ label, value, mono }: { label: string; value: string; mono?: boolean }) {
+function Field({ label, children }: { label: string; children: React.ReactNode }) {
   return (
-    <div className="flex justify-between gap-4">
-      <dt className="text-ink-soft">{label}</dt>
-      <dd className={`text-ink text-right ${mono ? "font-mono" : ""}`}>{value}</dd>
+    <div>
+      <label className="block text-xs text-ink-soft mb-1">{label}</label>
+      {children}
     </div>
   );
 }

@@ -1,135 +1,34 @@
-// Types matching supabase/migrations/0001_init.sql.
-// Once the real Supabase project is running, regenerate with:
-//   npx supabase gen types typescript --project-id <ref> > src/types/database.ts
-// and this hand-written version can be deleted.
+const STYLES: Record<string, string> = {
+  overdue: "border-rust text-rust",
+  expired: "border-rust text-rust",
+  due_soon: "border-amber text-amber",
+  expiring_soon: "border-amber text-amber",
+  upcoming: "border-teal text-teal",
+  active: "border-teal text-teal",
+  not_scheduled: "border-ink-soft text-ink-soft",
+  no_warranty: "border-ink-soft text-ink-soft",
+};
 
-export type AssetCategory =
-  | "Devices"
-  | "Furniture"
-  | "AC & HVAC"
-  | "Plumbing"
-  | "Electrical"
-  | "Ceramic & Tiles"
-  | "Gypsum"
-  | "Doors & Windows"
-  | "Paint"
-  | "Car"
-  | "Other";
+const LABELS: Record<string, string> = {
+  overdue: "Overdue",
+  expired: "Expired",
+  due_soon: "Due soon",
+  expiring_soon: "Expiring soon",
+  upcoming: "Upcoming",
+  active: "Active",
+  not_scheduled: "Not scheduled",
+  no_warranty: "No warranty",
+};
 
-export const ASSET_CATEGORIES: AssetCategory[] = [
-  "Devices",
-  "Furniture",
-  "AC & HVAC",
-  "Plumbing",
-  "Electrical",
-  "Ceramic & Tiles",
-  "Gypsum",
-  "Doors & Windows",
-  "Paint",
-  "Car",
-  "Other",
-];
+export function StatusStamp({ status }: { status: string }) {
+  const style = STYLES[status] ?? "border-ink-soft text-ink-soft";
+  const label = LABELS[status] ?? status;
 
-export interface Household {
-  id: string;
-  name: string;
-  invite_code: string;
-  created_by: string;
-  created_at: string;
-}
-
-export interface HouseholdMember {
-  id: string;
-  household_id: string;
-  user_id: string;
-  role: "owner" | "member";
-  joined_at: string;
-}
-
-export interface Receipt {
-  id: string;
-  household_id: string;
-  image_path: string;
-  raw_ai_response: Record<string, unknown> | null;
-  vendor: string | null;
-  purchase_date: string | null;
-  total_price: number | null;
-  category: string | null;
-  ocr_language_detected: string | null;
-  assumptions: string[];
-  questions: string[];
-  uploaded_by: string;
-  created_at: string;
-}
-
-export interface Asset {
-  id: string;
-  household_id: string;
-  name: string;
-  category: AssetCategory;
-  brand: string | null;
-  model: string | null;
-  vendor: string | null;
-  purchase_date: string | null;
-  price: number | null;
-  warranty_months: number | null;
-  warranty_expiry_date: string | null;
-  receipt_id: string | null;
-  notes: string | null;
-  created_by: string;
-  created_at: string;
-  updated_at: string;
-}
-
-export type WarrantyStatus = "no_warranty" | "expired" | "expiring_soon" | "active";
-
-export interface WarrantyDashboardRow extends Asset {
-  warranty_status: WarrantyStatus;
-}
-
-export interface MaintenanceTask {
-  id: string;
-  household_id: string;
-  asset_id: string | null;
-  task_type: string;
-  frequency_months: number;
-  last_done_date: string | null;
-  next_due_date: string | null;
-  notes: string | null;
-  created_by: string;
-  created_at: string;
-}
-
-export type MaintenanceStatus = "not_scheduled" | "overdue" | "due_soon" | "upcoming";
-
-export interface MaintenanceDashboardRow extends MaintenanceTask {
-  asset_name: string | null;
-  status: MaintenanceStatus;
-}
-
-export interface MaintenanceLog {
-  id: string;
-  maintenance_task_id: string;
-  done_date: string;
-  cost: number | null;
-  notes: string | null;
-  done_by: string;
-  created_at: string;
-}
-
-// Shape returned by the receipt-scan Edge Function
-export interface ReceiptScanResult {
-  name: string | null;
-  category: AssetCategory | null;
-  brand: string | null;
-  model: string | null;
-  buy: string | null; // purchase date, YYYY-MM-DD
-  price: number | null;
-  rcpt: string | null; // receipt/invoice number
-  store: string | null;
-  war: string | null; // warranty duration as stated
-  warranty_months: number | null; // parsed from `war`; DB derives the actual expiry date from this
-  language_detected: "ar" | "en" | "mixed" | null;
-  assumptions: string[];
-  questions: string[];
+  return (
+    <span
+      className={`inline-block border-2 rounded px-2 py-0.5 text-[11px] font-serif font-bold tracking-wide uppercase -rotate-2 ${style}`}
+    >
+      {label}
+    </span>
+  );
 }
