@@ -1,48 +1,48 @@
-import { createClient } from "@/lib/supabase/server";
-import { getCurrentUserAndHousehold } from "@/lib/household";
-import { SignOutButton } from "./SignOutButton";
+"use client";
 
-export default async function HouseholdSettingsPage() {
-  const { household, user } = await getCurrentUserAndHousehold();
-  if (!household) return null;
+import { useState } from "react";
+import { useRouter } from "next/navigation";
+import { createClient } from "@/lib/supabase/client";
 
-  const supabase = await createClient();
-  const { data: members } = await supabase
-    .from("household_members")
-    .select("id, role, user_id")
-    .eq("household_id", household.id);
+export function DeleteAssetButton({ assetId }: { assetId: string }) {
+  const router = useRouter();
+  const [confirming, setConfirming] = useState(false);
+  const [loading, setLoading] = useState(false);
+
+  async function handleDelete() {
+    setLoading(true);
+    const supabase = createClient();
+    await supabase.from("assets").delete().eq("id", assetId);
+    router.push("/assets");
+    router.refresh();
+  }
+
+  if (!confirming) {
+    return (
+      <button
+        onClick={() => setConfirming(true)}
+        className="w-full text-rust text-sm py-2 border border-rust/30 rounded-lg hover:bg-rust-tint transition-colors"
+      >
+        Delete asset
+      </button>
+    );
+  }
 
   return (
-    <div className="p-4 max-w-lg mx-auto space-y-4">
-      <h1 className="font-serif text-xl text-ink">Household settings</h1>
-
-      <div className="bg-white border border-line rounded-xl p-4">
-        <p className="text-xs text-ink-soft mb-1">Household name</p>
-        <p className="text-ink font-medium">{household.name}</p>
-      </div>
-
-      <div className="bg-white border border-line rounded-xl p-4">
-        <p className="text-xs text-ink-soft mb-1">Invite code</p>
-        <p className="font-mono text-lg text-teal-dark tracking-wide">{household.invite_code}</p>
-        <p className="text-xs text-ink-soft mt-2">
-          Share this code so someone else can join your household — they&apos;ll enter it
-          during sign-up.
-        </p>
-      </div>
-
-      <div className="bg-white border border-line rounded-xl p-4">
-        <p className="text-xs text-ink-soft mb-2">Members ({members?.length ?? 0})</p>
-        <div className="space-y-1.5 text-sm">
-          {members?.map((m) => (
-            <div key={m.id} className="flex justify-between">
-              <span className="text-ink">{m.user_id === user?.id ? "You" : "Household member"}</span>
-              <span className="text-ink-soft capitalize">{m.role}</span>
-            </div>
-          ))}
-        </div>
-      </div>
-
-      <SignOutButton />
+    <div className="flex gap-2">
+      <button
+        onClick={handleDelete}
+        disabled={loading}
+        className="flex-1 bg-rust text-white rounded-lg py-2 text-sm font-medium disabled:opacity-60"
+      >
+        {loading ? "Deleting..." : "Confirm delete"}
+      </button>
+      <button
+        onClick={() => setConfirming(false)}
+        className="flex-1 border border-line rounded-lg py-2 text-sm text-ink-soft"
+      >
+        Cancel
+      </button>
     </div>
   );
 }
