@@ -1,6 +1,11 @@
 import Link from "next/link";
 import { getCurrentUserAndHousehold } from "@/lib/household";
-import { getUrgentWarranties, getUrgentMaintenance, getHouseholdStats } from "@/lib/queries";
+import {
+  getUrgentWarranties,
+  getUrgentMaintenance,
+  getHouseholdStats,
+  getNextPurchases,
+} from "@/lib/queries";
 import { StatusStamp } from "@/components/StatusStamp";
 
 function formatDate(date: string | null) {
@@ -12,7 +17,8 @@ function formatDate(date: string | null) {
   });
 }
 
-function formatSAR(amount: number) {
+function formatSAR(amount: number | null) {
+  if (amount === null) return "—";
   return new Intl.NumberFormat("en-SA", {
     style: "currency",
     currency: "SAR",
@@ -24,13 +30,15 @@ export default async function DashboardPage() {
   const { household } = await getCurrentUserAndHousehold();
   if (!household) return null;
 
-  const [warranties, maintenance, stats] = await Promise.all([
+  const [warranties, maintenance, stats, nextPurchases] = await Promise.all([
     getUrgentWarranties(household.id),
     getUrgentMaintenance(household.id),
     getHouseholdStats(household.id),
+    getNextPurchases(household.id),
   ]);
 
-  const urgentCount = warranties.length + maintenance.length;
+  const topPurchases = nextPurchases.slice(0, 4);
+  const topMaintenance = maintenance.slice(0, 4);
 
   return (
     <div className="p-4 space-y-6 max-w-2xl mx-auto">
@@ -53,21 +61,89 @@ export default async function DashboardPage() {
         </div>
       </div>
 
-      <section>
-        <h2 className="font-serif text-lg text-ink mb-3">
-          Top Urgent Items {urgentCount > 0 && `(${urgentCount})`}
-        </h2>
+      {warranties.length > 0 && (
+        <section>
+          <h2 className="text-xs font-medium text-ink-soft uppercase tracking-wide mb-2">
+            Warranty expiring soon
+          </h2>
+          <div className="space-y-2">
+            {warranties.map((asset) => (
+              <Link
+                key={asset.id}
+                href={`/assets/${asset.id}`}
+                className="flex items-center justify-between bg-white border border-line rounded-xl p-3.5 hover:border-teal transition-colors"
+              >
+                <div>
+                  <p className="text-ink font-medium">{asset.name}</p>
+                  <p className="text-xs text-ink-soft mt-0.5">
+                    {asset.warranty_status === "expired" ? "Expired" : "Expires"}{" "}
+                    {formatDate(asset.warranty_expiry_date)}
+                  </p>
+                </div>
+                <StatusStamp status={asset.warranty_status} />
+              </Link>
+            ))}
+          </div>
+        </section>
+      )}
 
-        {urgentCount === 0 ? (
+      <section>
+        <div className="flex items-center justify-between mb-2">
+          <h2 className="font-serif text-lg text-ink">Next Purchase</h2>
+          <Link href="/planning" className="text-xs text-teal">
+            View all →
+          </Link>
+        </div>
+
+        {topPurchases.length === 0 ? (
           <div className="bg-teal-tint border border-teal/20 rounded-xl p-4 text-center text-teal-dark text-sm">
-            Nothing urgent right now. Nicely kept.
+            Nothing on your wishlist right now.
           </div>
         ) : (
           <div className="space-y-2">
-            {maintenance.map((task) => (
+            {topPurchases.map((item) => (
+              <Link
+                key={item.id}
+                href={`/planning/${item.id}/edit`}
+                className="flex items-center justify-between bg-white border border-line rounded-xl p-3.5 hover:border-teal transition-colors"
+              >
+                <div>
+                  <p className="text-ink font-medium">{item.name}</p>
+                  <p className="text-xs text-ink-soft mt-0.5">
+                    {item.category}
+                    {item.expected_vendor ? ` · ${item.expected_vendor}` : ""}
+                  </p>
+                </div>
+                <div className="flex items-center gap-2">
+                  <p className="font-mono text-sm text-ink-soft">
+                    {formatSAR(item.expected_price)}
+                  </p>
+                  {item.priority === "need_soon" && <StatusStamp status="due_soon" />}
+                </div>
+              </Link>
+            ))}
+          </div>
+        )}
+      </section>
+
+      <section>
+        <div className="flex items-center justify-between mb-2">
+          <h2 className="font-serif text-lg text-ink">Next Maintenance Task</h2>
+          <Link href="/maintenance" className="text-xs text-teal">
+            View all →
+          </Link>
+        </div>
+
+        {topMaintenance.length === 0 ? (
+          <div className="bg-teal-tint border border-teal/20 rounded-xl p-4 text-center text-teal-dark text-sm">
+            Nothing due right now. Nicely kept.
+          </div>
+        ) : (
+          <div className="space-y-2">
+            {topMaintenance.map((task) => (
               <Link
                 key={task.id}
-                href={`/maintenance`}
+                href="/maintenance"
                 className="flex items-center justify-between bg-white border border-line rounded-xl p-3.5 hover:border-teal transition-colors"
               >
                 <div>
@@ -78,23 +154,6 @@ export default async function DashboardPage() {
                   </p>
                 </div>
                 <StatusStamp status={task.status} />
-              </Link>
-            ))}
-
-            {warranties.map((asset) => (
-              <Link
-                key={asset.id}
-                href={`/assets/${asset.id}`}
-                className="flex items-center justify-between bg-white border border-line rounded-xl p-3.5 hover:border-teal transition-colors"
-              >
-                <div>
-                  <p className="text-ink font-medium">{asset.name}</p>
-                  <p className="text-xs text-ink-soft mt-0.5">
-                    Warranty {task_or_warranty_word(asset.warranty_status)}{" "}
-                    {formatDate(asset.warranty_expiry_date)}
-                  </p>
-                </div>
-                <StatusStamp status={asset.warranty_status} />
               </Link>
             ))}
           </div>
@@ -109,16 +168,12 @@ export default async function DashboardPage() {
           + Add asset
         </Link>
         <Link
-          href="/maintenance/new"
+          href="/planning/new"
           className="flex-1 text-center border border-teal text-teal rounded-lg py-2.5 font-medium hover:bg-teal-tint transition-colors"
         >
-          + Log maintenance
+          + Plan purchase
         </Link>
       </div>
     </div>
   );
-}
-
-function task_or_warranty_word(status: string) {
-  return status === "expired" ? "expired" : "expires";
 }

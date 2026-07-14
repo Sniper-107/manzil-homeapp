@@ -11,7 +11,7 @@ export async function getCurrentUserAndHousehold() {
 
   const { data: membership } = await supabase
     .from("household_members")
-    .select("household_id, role, households(id, name, invite_code, created_by, created_at)")
+    .select("household_id, role, households(id, name, invite_code, planning_budget, created_by, created_at)")
     .eq("user_id", user.id)
     .limit(1)
     .maybeSingle();

@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { useRouter, useParams } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import { ASSET_CATEGORIES, type AssetCategory } from "@/types/database";
+import { RoomSelect } from "@/components/RoomSelect";
 
 interface FormState {
   name: string;
@@ -14,6 +15,7 @@ interface FormState {
   purchase_date: string;
   price: string;
   warranty_months: string;
+  room_id: string;
   notes: string;
 }
 
@@ -47,6 +49,7 @@ export default function EditAssetPage() {
         purchase_date: data.purchase_date ?? "",
         price: data.price?.toString() ?? "",
         warranty_months: data.warranty_months?.toString() ?? "",
+        room_id: data.room_id ?? "",
         notes: data.notes ?? "",
       });
     }
@@ -71,6 +74,7 @@ export default function EditAssetPage() {
         purchase_date: form.purchase_date || null,
         price: form.price ? parseFloat(form.price) : null,
         warranty_months: form.warranty_months ? parseInt(form.warranty_months, 10) : null,
+        room_id: form.room_id || null,
         notes: form.notes || null,
       })
       .eq("id", params.id);
@@ -172,6 +176,13 @@ export default function EditAssetPage() {
             value={form.warranty_months}
             onChange={(e) => setForm({ ...form, warranty_months: e.target.value })}
             className="input"
+          />
+        </Field>
+
+        <Field label="Room">
+          <RoomSelect
+            value={form.room_id}
+            onChange={(roomId) => setForm({ ...form, room_id: roomId })}
           />
         </Field>
 

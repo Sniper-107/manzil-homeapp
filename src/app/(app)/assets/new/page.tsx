@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import { compressImage } from "@/lib/imageCompress";
 import { ASSET_CATEGORIES, type AssetCategory } from "@/types/database";
+import { RoomSelect } from "@/components/RoomSelect";
 
 type Stage = "idle" | "uploading" | "scanning" | "review" | "saving";
 
@@ -17,6 +18,7 @@ interface FormState {
   purchase_date: string;
   price: string;
   warranty_months: string;
+  room_id: string;
   notes: string;
 }
 
@@ -29,6 +31,7 @@ const EMPTY_FORM: FormState = {
   purchase_date: "",
   price: "",
   warranty_months: "",
+  room_id: "",
   notes: "",
 };
 
@@ -99,6 +102,7 @@ export default function NewAssetPage() {
         purchase_date: result.buy ?? "",
         price: result.price?.toString() ?? "",
         warranty_months: result.warranty_months?.toString() ?? "",
+        room_id: "",
         notes: "",
       });
       setAssumptions(result.assumptions ?? []);
@@ -165,6 +169,7 @@ export default function NewAssetPage() {
           purchase_date: form.purchase_date || null,
           price: form.price ? parseFloat(form.price) : null,
           warranty_months: form.warranty_months ? parseInt(form.warranty_months, 10) : null,
+          room_id: form.room_id || null,
           receipt_id: receiptId,
           notes: form.notes || null,
           created_by: user!.id,
@@ -347,6 +352,13 @@ export default function NewAssetPage() {
                 value={form.warranty_months}
                 onChange={(e) => setForm({ ...form, warranty_months: e.target.value })}
                 className="input"
+              />
+            </Field>
+
+            <Field label="Room">
+              <RoomSelect
+                value={form.room_id}
+                onChange={(roomId) => setForm({ ...form, room_id: roomId })}
               />
             </Field>
 

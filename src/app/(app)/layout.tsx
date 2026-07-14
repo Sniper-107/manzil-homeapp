@@ -28,6 +28,7 @@ export default async function AppLayout({
       <nav className="fixed bottom-0 inset-x-0 bg-white border-t border-line flex">
         <NavLink href="/dashboard" label="Dashboard" />
         <NavLink href="/assets" label="Assets" />
+        <NavLink href="/planning" label="Planning" />
         <NavLink href="/maintenance" label="Maintenance" />
       </nav>
     </div>

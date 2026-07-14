@@ -4,6 +4,7 @@ import { createClient } from "@/lib/supabase/server";
 import { getCurrentUserAndHousehold } from "@/lib/household";
 import type { Asset, Receipt } from "@/types/database";
 import { DeleteAssetButton } from "./DeleteAssetButton";
+import { DocumentsSection } from "@/components/DocumentsSection";
 
 function formatDate(date: string | null) {
   if (!date) return "—";
@@ -95,6 +96,8 @@ export default async function AssetDetailPage({
           <img src={receiptPhotoUrl} alt="Receipt" className="rounded-lg w-full" />
         </div>
       )}
+
+      <DocumentsSection assetId={typedAsset.id} householdId={household.id} />
 
       <div className="flex gap-2">
         <Link

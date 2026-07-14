@@ -1,6 +1,7 @@
 import { createClient } from "@/lib/supabase/server";
 import { getCurrentUserAndHousehold } from "@/lib/household";
 import { SignOutButton } from "./SignOutButton";
+import { PlanningBudgetField } from "./PlanningBudgetField";
 
 export default async function HouseholdSettingsPage() {
   const { household, user } = await getCurrentUserAndHousehold();
@@ -27,6 +28,14 @@ export default async function HouseholdSettingsPage() {
         <p className="text-xs text-ink-soft mt-2">
           Share this code so someone else can join your household — they&apos;ll enter it
           during sign-up.
+        </p>
+      </div>
+
+      <div className="bg-white border border-line rounded-xl p-4">
+        <p className="text-xs text-ink-soft mb-1">Planning budget</p>
+        <PlanningBudgetField householdId={household.id} initialValue={household.planning_budget} />
+        <p className="text-xs text-ink-soft mt-2">
+          A rough cap for everything still on your Planning wishlist.
         </p>
       </div>
 

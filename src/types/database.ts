@@ -34,7 +34,15 @@ export interface Household {
   id: string;
   name: string;
   invite_code: string;
+  planning_budget: number | null;
   created_by: string;
+  created_at: string;
+}
+
+export interface Room {
+  id: string;
+  household_id: string;
+  name: string;
   created_at: string;
 }
 
@@ -75,6 +83,7 @@ export interface Asset {
   warranty_months: number | null;
   warranty_expiry_date: string | null;
   receipt_id: string | null;
+  room_id: string | null;
   notes: string | null;
   created_by: string;
   created_at: string;
@@ -91,12 +100,45 @@ export interface MaintenanceTask {
   id: string;
   household_id: string;
   asset_id: string | null;
+  room_id: string | null;
   task_type: string;
   frequency_months: number;
   last_done_date: string | null;
   next_due_date: string | null;
   notes: string | null;
   created_by: string;
+  created_at: string;
+}
+
+export type PlanningPriority = "need_soon" | "later";
+export type PlanningStatus = "planned" | "purchased" | "cancelled";
+
+export interface PlanningItem {
+  id: string;
+  household_id: string;
+  name: string;
+  category: AssetCategory | null;
+  expected_price: number | null;
+  expected_vendor: string | null;
+  priority: PlanningPriority;
+  status: PlanningStatus;
+  notes: string | null;
+  room_id: string | null;
+  created_by: string;
+  created_at: string;
+  purchased_at: string | null;
+}
+
+export type DocumentType = "warranty_card" | "manual" | "invoice" | "other";
+
+export interface AssetDocument {
+  id: string;
+  household_id: string;
+  asset_id: string | null;
+  file_path: string;
+  file_name: string;
+  doc_type: DocumentType;
+  uploaded_by: string;
   created_at: string;
 }
 

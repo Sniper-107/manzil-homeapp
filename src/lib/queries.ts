@@ -1,5 +1,25 @@
 import { createClient } from "@/lib/supabase/server";
-import type { WarrantyDashboardRow, MaintenanceDashboardRow } from "@/types/database";
+import type { WarrantyDashboardRow, MaintenanceDashboardRow, PlanningItem } from "@/types/database";
+
+export async function getNextPurchases(householdId: string) {
+  const supabase = await createClient();
+  const { data, error } = await supabase
+    .from("planning_items")
+    .select("*")
+    .eq("household_id", householdId)
+    .eq("status", "planned")
+    .order("created_at", { ascending: true });
+
+  if (error) throw error;
+
+  const items = (data ?? []) as PlanningItem[];
+  // need_soon items first, then later — sorted explicitly rather than
+  // relying on alphabetic SQL ordering of the priority string.
+  return items.sort((a, b) => {
+    if (a.priority === b.priority) return 0;
+    return a.priority === "need_soon" ? -1 : 1;
+  });
+}
 
 export async function getUrgentWarranties(householdId: string) {
   const supabase = await createClient();

@@ -32,6 +32,7 @@ for Saudi Arabia — whichever is closest/available).
 Supabase Dashboard → SQL Editor → paste and run, **in order**:
 1. `supabase/migrations/0001_init.sql`
 2. `supabase/migrations/0002_storage.sql`
+3. `supabase/migrations/0003_rooms_planning_documents.sql`
 
 ### 3. Configure Auth
 Dashboard → Authentication → Providers → **Email**:

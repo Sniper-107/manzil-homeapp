@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { useRouter, useParams } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
+import { RoomSelect } from "@/components/RoomSelect";
 
 interface AssetOption {
   id: string;
@@ -15,6 +16,7 @@ export default function EditMaintenanceTaskPage() {
   const [assets, setAssets] = useState<AssetOption[]>([]);
   const [taskType, setTaskType] = useState("");
   const [assetId, setAssetId] = useState("");
+  const [roomId, setRoomId] = useState("");
   const [frequencyMonths, setFrequencyMonths] = useState("");
   const [lastDoneDate, setLastDoneDate] = useState("");
   const [notes, setNotes] = useState("");
@@ -39,6 +41,7 @@ export default function EditMaintenanceTaskPage() {
 
       setTaskType(task.task_type ?? "");
       setAssetId(task.asset_id ?? "");
+      setRoomId(task.room_id ?? "");
       setFrequencyMonths(task.frequency_months?.toString() ?? "");
       setLastDoneDate(task.last_done_date ?? "");
       setNotes(task.notes ?? "");
@@ -58,6 +61,7 @@ export default function EditMaintenanceTaskPage() {
       .update({
         task_type: taskType,
         asset_id: assetId || null,
+        room_id: roomId || null,
         frequency_months: parseInt(frequencyMonths, 10),
         last_done_date: lastDoneDate || null,
         notes: notes || null,
@@ -115,6 +119,11 @@ export default function EditMaintenanceTaskPage() {
               </option>
             ))}
           </select>
+        </div>
+
+        <div>
+          <label className="block text-xs text-ink-soft mb-1">Room (optional)</label>
+          <RoomSelect value={roomId} onChange={setRoomId} />
         </div>
 
         <div className="grid grid-cols-2 gap-3">

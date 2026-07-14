@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
+import { RoomSelect } from "@/components/RoomSelect";
 
 interface AssetOption {
   id: string;
@@ -23,6 +24,7 @@ export default function NewMaintenanceTaskPage() {
   const [assets, setAssets] = useState<AssetOption[]>([]);
   const [taskType, setTaskType] = useState("");
   const [assetId, setAssetId] = useState("");
+  const [roomId, setRoomId] = useState("");
   const [frequencyMonths, setFrequencyMonths] = useState("6");
   const [lastDoneDate, setLastDoneDate] = useState("");
   const [notes, setNotes] = useState("");
@@ -59,6 +61,7 @@ export default function NewMaintenanceTaskPage() {
       const { error: insertError } = await supabase.from("maintenance_tasks").insert({
         household_id: membership.household_id,
         asset_id: assetId || null,
+        room_id: roomId || null,
         task_type: taskType,
         frequency_months: parseInt(frequencyMonths, 10),
         last_done_date: lastDoneDate || null,
@@ -108,6 +111,11 @@ export default function NewMaintenanceTaskPage() {
               </option>
             ))}
           </select>
+        </div>
+
+        <div>
+          <label className="block text-xs text-ink-soft mb-1">Room (optional)</label>
+          <RoomSelect value={roomId} onChange={setRoomId} />
         </div>
 
         <div className="grid grid-cols-2 gap-3">
