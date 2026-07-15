@@ -38,12 +38,20 @@ export default async function PlanningPage() {
     <div className="p-4 max-w-2xl mx-auto space-y-5">
       <div className="flex items-center justify-between">
         <h1 className="font-serif text-xl text-ink">Planning</h1>
-        <Link
-          href="/planning/new"
-          className="bg-teal text-white rounded-lg px-4 py-2 text-sm font-medium hover:bg-teal-dark transition-colors"
-        >
-          + Add
-        </Link>
+        <div className="flex gap-2">
+          <Link
+            href="/planning/bulk"
+            className="border border-teal text-teal rounded-lg px-3 py-2 text-sm font-medium hover:bg-teal-tint transition-colors"
+          >
+            Bulk add
+          </Link>
+          <Link
+            href="/planning/new"
+            className="bg-teal text-white rounded-lg px-4 py-2 text-sm font-medium hover:bg-teal-dark transition-colors"
+          >
+            + Add
+          </Link>
+        </div>
       </div>
 
       <div className="bg-white border border-line rounded-xl p-4">

@@ -20,3 +20,19 @@ export async function getCurrentUserAndHousehold() {
 
   return { user, household, role: membership?.role as "owner" | "member" | undefined };
 }
+
+export async function getUserLanguage(): Promise<"en" | "ar"> {
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) return "en";
+
+  const { data } = await supabase
+    .from("user_preferences")
+    .select("language")
+    .eq("user_id", user.id)
+    .maybeSingle();
+
+  return (data?.language as "en" | "ar") ?? "en";
+}

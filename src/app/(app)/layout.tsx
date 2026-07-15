@@ -1,6 +1,9 @@
 import { redirect } from "next/navigation";
-import Link from "next/link";
-import { getCurrentUserAndHousehold } from "@/lib/household";
+import { getCurrentUserAndHousehold, getUserLanguage } from "@/lib/household";
+import { LanguageProvider } from "@/lib/i18n/LanguageProvider";
+import { LanguageToggle } from "@/components/LanguageToggle";
+import { NavLink } from "./NavLink";
+import { SettingsLink } from "./SettingsLink";
 
 export default async function AppLayout({
   children,
@@ -8,40 +11,34 @@ export default async function AppLayout({
   children: React.ReactNode;
 }) {
   const { user, household } = await getCurrentUserAndHousehold();
+  const language = await getUserLanguage();
 
   if (!user) redirect("/login");
   if (!household) redirect("/onboarding");
 
   return (
-    <div className="flex-1 flex flex-col min-h-screen pb-16">
-      <header className="border-b border-line bg-white px-4 py-3 flex items-center justify-between sticky top-0 z-10">
-        <div>
-          <p className="font-serif text-lg text-ink leading-tight">{household.name}</p>
-        </div>
-        <Link href="/household" className="text-ink-soft text-sm">
-          Settings
-        </Link>
-      </header>
+    <LanguageProvider initialLanguage={language}>
+      <div className="flex-1 flex flex-col min-h-screen pb-16">
+        <header className="border-b border-line bg-white px-4 py-3 flex items-center justify-between sticky top-0 z-10">
+          <div>
+            <p className="font-serif text-lg text-ink leading-tight">{household.name}</p>
+          </div>
+          <div className="flex items-center gap-3">
+            <LanguageToggle />
+            <SettingsLink />
+          </div>
+        </header>
 
-      <main className="flex-1">{children}</main>
+        <main className="flex-1">{children}</main>
 
-      <nav className="fixed bottom-0 inset-x-0 bg-white border-t border-line flex">
-        <NavLink href="/dashboard" label="Dashboard" />
-        <NavLink href="/assets" label="Assets" />
-        <NavLink href="/planning" label="Planning" />
-        <NavLink href="/maintenance" label="Maintenance" />
-      </nav>
-    </div>
+        <nav className="fixed bottom-0 inset-x-0 bg-white border-t border-line flex">
+          <NavLink href="/dashboard" labelKey="nav_dashboard" />
+          <NavLink href="/assets" labelKey="nav_assets" />
+          <NavLink href="/planning" labelKey="nav_planning" />
+          <NavLink href="/maintenance" labelKey="nav_maintenance" />
+        </nav>
+      </div>
+    </LanguageProvider>
   );
 }
 
-function NavLink({ href, label }: { href: string; label: string }) {
-  return (
-    <Link
-      href={href}
-      className="flex-1 text-center py-3 text-sm text-ink-soft hover:text-teal hover:bg-teal-tint transition-colors"
-    >
-      {label}
-    </Link>
-  );
-}

@@ -3,9 +3,11 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
+import { useLanguage } from "@/lib/i18n/LanguageProvider";
 
 export function MarkDoneButton({ taskId }: { taskId: string }) {
   const router = useRouter();
+  const { t } = useLanguage();
   const [open, setOpen] = useState(false);
   const [cost, setCost] = useState("");
   const [notes, setNotes] = useState("");
@@ -45,19 +47,17 @@ export function MarkDoneButton({ taskId }: { taskId: string }) {
         onClick={() => setOpen(true)}
         className="text-xs border border-teal text-teal rounded-lg px-2.5 py-1.5 hover:bg-teal-tint transition-colors whitespace-nowrap"
       >
-        Mark done
+        {t("mark_done")}
       </button>
 
       {open && (
         <div className="fixed inset-0 bg-ink/40 flex items-end sm:items-center justify-center z-50 p-4">
           <div className="bg-white rounded-xl p-5 w-full max-w-sm space-y-4">
-            <h3 className="font-serif text-lg text-ink">Mark as done</h3>
-            <p className="text-xs text-ink-soft -mt-2">
-              Add what you did, if you&apos;d like — both fields are optional.
-            </p>
+            <h3 className="font-serif text-lg text-ink">{t("mark_as_done")}</h3>
+            <p className="text-xs text-ink-soft -mt-2">{t("add_what_you_did")}</p>
 
             <div>
-              <label className="block text-xs text-ink-soft mb-1">Cost (SAR, optional)</label>
+              <label className="block text-xs text-ink-soft mb-1">{t("cost_optional")}</label>
               <input
                 type="number"
                 step="0.01"
@@ -69,7 +69,7 @@ export function MarkDoneButton({ taskId }: { taskId: string }) {
             </div>
 
             <div>
-              <label className="block text-xs text-ink-soft mb-1">Notes (optional)</label>
+              <label className="block text-xs text-ink-soft mb-1">{t("notes_optional")}</label>
               <textarea
                 value={notes}
                 onChange={(e) => setNotes(e.target.value)}
@@ -85,14 +85,14 @@ export function MarkDoneButton({ taskId }: { taskId: string }) {
                 disabled={loading}
                 className="flex-1 bg-teal text-white rounded-lg py-2 text-sm font-medium hover:bg-teal-dark transition-colors disabled:opacity-60"
               >
-                {loading ? "Saving..." : "Confirm done"}
+                {loading ? t("saving") : t("confirm_done")}
               </button>
               <button
                 onClick={() => setOpen(false)}
                 disabled={loading}
                 className="flex-1 border border-line rounded-lg py-2 text-sm text-ink-soft"
               >
-                Cancel
+                {t("cancel")}
               </button>
             </div>
           </div>

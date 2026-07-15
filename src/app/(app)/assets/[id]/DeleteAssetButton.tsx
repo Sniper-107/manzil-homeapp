@@ -3,9 +3,11 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
+import { useLanguage } from "@/lib/i18n/LanguageProvider";
 
 export function DeleteAssetButton({ assetId }: { assetId: string }) {
   const router = useRouter();
+  const { t } = useLanguage();
   const [confirming, setConfirming] = useState(false);
   const [loading, setLoading] = useState(false);
 
@@ -23,7 +25,7 @@ export function DeleteAssetButton({ assetId }: { assetId: string }) {
         onClick={() => setConfirming(true)}
         className="w-full text-rust text-sm py-2 border border-rust/30 rounded-lg hover:bg-rust-tint transition-colors"
       >
-        Delete asset
+        {t("delete_asset")}
       </button>
     );
   }
@@ -35,13 +37,13 @@ export function DeleteAssetButton({ assetId }: { assetId: string }) {
         disabled={loading}
         className="flex-1 bg-rust text-white rounded-lg py-2 text-sm font-medium disabled:opacity-60"
       >
-        {loading ? "Deleting..." : "Confirm delete"}
+        {loading ? t("deleting") : t("confirm_delete")}
       </button>
       <button
         onClick={() => setConfirming(false)}
         className="flex-1 border border-line rounded-lg py-2 text-sm text-ink-soft"
       >
-        Cancel
+        {t("cancel")}
       </button>
     </div>
   );

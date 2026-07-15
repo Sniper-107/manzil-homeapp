@@ -20,9 +20,20 @@ const LABELS: Record<string, string> = {
   no_warranty: "No warranty",
 };
 
-export function StatusStamp({ status }: { status: string }) {
+const LABELS_AR: Record<string, string> = {
+  overdue: "متأخر",
+  expired: "منتهي",
+  due_soon: "قريبًا",
+  expiring_soon: "قارب على الانتهاء",
+  upcoming: "قادم",
+  active: "ساري",
+  not_scheduled: "غير مجدول",
+  no_warranty: "بدون ضمان",
+};
+
+export function StatusStamp({ status, language = "en" }: { status: string; language?: "en" | "ar" }) {
   const style = STYLES[status] ?? "border-ink-soft text-ink-soft";
-  const label = LABELS[status] ?? status;
+  const label = (language === "ar" ? LABELS_AR : LABELS)[status] ?? status;
 
   return (
     <span
