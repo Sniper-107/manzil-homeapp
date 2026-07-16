@@ -18,7 +18,7 @@ export default async function AppLayout({
 
   return (
     <LanguageProvider initialLanguage={language}>
-      <div className="flex-1 flex flex-col min-h-screen pb-16">
+      <div className="flex-1 flex flex-col min-h-screen pb-28">
         <header className="border-b border-line bg-white px-4 py-3 flex items-center justify-between sticky top-0 z-10">
           <div>
             <p className="font-serif text-lg text-ink leading-tight">{household.name}</p>
@@ -31,7 +31,10 @@ export default async function AppLayout({
 
         <main className="flex-1">{children}</main>
 
-        <nav className="fixed bottom-0 inset-x-0 bg-white border-t border-line flex">
+        <nav
+          className="fixed bottom-0 inset-x-0 bg-white border-t border-line flex pb-6"
+          style={{ paddingBottom: "calc(env(safe-area-inset-bottom, 0px) + 1.5rem)" }}
+        >
           <NavLink href="/dashboard" labelKey="nav_dashboard" />
           <NavLink href="/assets" labelKey="nav_assets" />
           <NavLink href="/planning" labelKey="nav_planning" />
